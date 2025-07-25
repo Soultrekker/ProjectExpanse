@@ -1,5 +1,7 @@
 require "source/tools"
 require "source/room"
+require "source/textbox"
+
 function love.load()
     love.window.setTitle("Bingus Dingus")
     background = love.graphics.newImage("assets/building1716.png")
@@ -31,13 +33,7 @@ function love.keypressed(key)
     if key == "escape" then
         love.event.quit()
     end
-    if key == "return" then
-        if state == "menu" then
-            state = "game"
-        else
-            state = "menu"
-        end
-    end
+
 
     if key == "up" then
         move_forward = true
@@ -52,6 +48,13 @@ function love.keypressed(key)
     end
     if key == "left" and turnstate == "stopped" and move_forward == false and move_backward == false then
         turnstate = "right" 
+    end
+
+    if key == "t" then
+        textbox_queue.add("This is a test message.", 100, 100, screen_width - 200, screen_height / 4, "normal")
+    end
+    if key == "return" then
+       textbox_queue.remove()
     end
 end
 
@@ -68,6 +71,28 @@ function love.draw()
     local vertical_space = 110*scale
     
     plotPolygons()
+    textbox_queue.draw()
+end
+
+function plotPolygons()
+    local tpoints, bpoints = {}, {}
+    
+    for _, v in ipairs(topvert) do
+        table.insert(tpoints, v.x)
+        table.insert(tpoints, v.y)
+    end
+    for _, v in ipairs(bottomvert) do
+        table.insert(bpoints, v.x)
+        table.insert(bpoints, v.y)
+    end
+
+    love.graphics.setColor(0.4, 0.8, 0.4, 1.0) 
+    love.graphics.polygon("fill", unpack(tpoints))
+    love.graphics.setColor(1, 0, 0)
+    love.graphics.polygon("fill", unpack(bpoints))
+    
+    selectwalls()
+
     love.graphics.setColor(1, 1, 1, 1) -- NORAMAL
     love.graphics.draw(front_mesh)
 
@@ -89,26 +114,6 @@ function love.draw()
     love.graphics.draw(top_mesh)
     love.graphics.setColor(1, 1, 1, back_opacity) 
     love.graphics.draw(back_mesh)
-end
-
-function plotPolygons()
-    local tpoints, bpoints = {}, {}
-    
-    for _, v in ipairs(topvert) do
-        table.insert(tpoints, v.x)
-        table.insert(tpoints, v.y)
-    end
-    for _, v in ipairs(bottomvert) do
-        table.insert(bpoints, v.x)
-        table.insert(bpoints, v.y)
-    end
-
-    love.graphics.setColor(0.4, 0.8, 0.4, 1.0) 
-    love.graphics.polygon("fill", unpack(tpoints))
-    love.graphics.setColor(1, 0, 0)
-    love.graphics.polygon("fill", unpack(bpoints))
-    
-    selectwalls()
 end
 
 function selectwalls()
