@@ -1,18 +1,21 @@
 require "source/tools"
 require "source/room"
 require "source/textbox"
+require "source/character"
+require "source/clickbox"
 
 function love.load()
-    love.window.setTitle("Bingus Dingus")
-    background = love.graphics.newImage("assets/building1716.png")
-    testimage= love.graphics.newImage("assets/referenceroom.png")
-    love.window.setMode( testimage:getWidth(), testimage:getHeight())
-    titleImage = love.graphics.newImage("assets/menu_assets/pixelatedtitle.png")
-    screen_width, screen_height = love.graphics.getDimensions()
-    center_x, center_y = screen_width / 2, screen_height / 2
+
+    initEnvironment()
+    
+    
+    love.physics.setMeter(64)
+    
     
     initVerts()
     initMeshes()
+        
+    initMouseClickBox()
 end
 
 turnstate = "stopped"
@@ -34,7 +37,6 @@ function love.keypressed(key)
         love.event.quit()
     end
 
-
     if key == "up" then
         move_forward = true
     end
@@ -51,7 +53,7 @@ function love.keypressed(key)
     end
 
     if key == "t" then
-        textbox_queue.add("This is a test message.", 100, 100, screen_width - 200, screen_height / 4, "normal")
+        textbox_queue.add("This is a test message.", 100, screen_height * 3/4, screen_width - 200, screen_height / 4, "normal")
     end
     if key == "return" then
        textbox_queue.remove()
@@ -60,8 +62,11 @@ end
 
 
 function love.update(dt)
+    world:update(dt)
     updateVerts()
     updateMeshes()
+    local mx, my = love.mouse.getPosition()
+    mouseSensor.body:setPosition(mx, my)
 end
 
 
@@ -72,6 +77,18 @@ function love.draw()
     
     plotPolygons()
     textbox_queue.draw()
+
+    -- Draw the test object (highlight if hovered)
+    if hoveredObject == test_object then
+        love.graphics.setColor(0, 1, 0, 1) -- Highlighted green
+    else
+        love.graphics.setColor(1, 0, 0, 1) -- Default red
+    end
+    love.graphics.polygon("fill", test_object.body:getWorldPoints(test_object.shape:getPoints()))
+
+
+    love.graphics.setColor(0, 1, 0, 0.5)
+    love.graphics.circle("fill", mouseSensor.body:getX(), mouseSensor.body:getY(), mouseSensor.shape:getRadius())
 end
 
 function plotPolygons()
@@ -168,4 +185,14 @@ function selectwalls()
 
     love.graphics.setColor(unpack(backcolor))
     love.graphics.polygon("fill", unpack(bpoints))
+end
+
+function initEnvironment()
+    love.window.setTitle("Bingus Dingus")
+    background = love.graphics.newImage("assets/building1716.png")
+    testimage= love.graphics.newImage("assets/referenceroom.png")
+    love.window.setMode( testimage:getWidth(), testimage:getHeight())
+    titleImage = love.graphics.newImage("assets/menu_assets/pixelatedtitle.png")
+    screen_width, screen_height = love.graphics.getDimensions()
+    center_x, center_y = screen_width / 2, screen_height / 2
 end
