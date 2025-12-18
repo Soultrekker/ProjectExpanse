@@ -3,7 +3,9 @@ Project intended to expand my personal technical knowledge and pursue my hobby i
 
 ## WHY LUA?
 -Lua is almost as fast as C but without the complex memory management
+
 -Lua better than python for lightweight straightforward development
+
 -I like lua games so I like lua
 
 ## What does it do?
