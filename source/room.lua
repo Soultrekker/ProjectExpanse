@@ -1,3 +1,8 @@
+-- room.lua
+
+-- Vertexes are groups of four points that make up the corners of each wall/floor/ceiling
+-- Instead of creating four vertexes for each wall or element, I actually create 8 points and reuse them,
+-- I only initialize like this to make it a less abstracted initialization (better to see everything laid out)
 function initVerts()
     frontvert = {
         {x = 0, y = 0},                       -- top-left
@@ -39,6 +44,9 @@ function initVerts()
     }
 end
 
+-- Meshes are love objects for drawing textured polygons
+-- Here we initialize our meshes and load textures
+-- Meshes will be updated each frame to change vertex positions and textures
 function initMeshes()
     wall1_image = love.graphics.newImage("assets/wall1.png")
     wall2_image = love.graphics.newImage("assets/wall2.png")
@@ -99,24 +107,26 @@ function initMeshes()
     top_mesh:setTexture(ceiling_image)
 end
 
+-- gets called in love.update, updates vertex positions based on turn_state and move progress
 function updateVerts()
-    local angle = 0;
+    local angle = 0; --Dont question it its magic \(0-0)/
     local direction = (turnstate == "right") and 1 or -1 
     local top_center_of_spin = {x = center_x, y = center_y - screen_height *.4*move_progress}
     local bottom_center_of_spin = {x = center_x, y = center_y + screen_height *.4*move_progress}
 
-    if turnstate ~= "stopped" then --NOT EQUAL STOPPED
+    -- If we are NOT stopped then keep turning
+    if turnstate ~= "stopped" then --NOT EQUAL STOPPED LUA LOOKS LIKE THIS I KNOW
         turn_progress = turn_progress + turn_speed
         back_opacity = turn_progress
 
-        if turn_progress >= 1 then
+        if turn_progress >= 1 then -- 1 means we finished a 90 degree turn
             turn_progress = 0
             back_opacity = 0
             turnstate = "stopped"
             changeLookState((direction == 1) and "right" or "left")
         end
 
-
+        --Ok so its just an angle calc no magic here, converting it to radians bc love2d uses radians
         angle = angle + direction * turn_progress * math.pi/2 
 
     elseif turnstate == "stopped" then
@@ -125,6 +135,7 @@ function updateVerts()
         local default_move_progress = 1
         local move_reset_threshold = .01
 
+        -- moving forward and backward is very rudimentary right now, doesn't look pretty
         if move_forward then
             move_progress = move_progress + move_speed
             if move_progress >= upper_bound then
@@ -145,12 +156,13 @@ function updateVerts()
         elseif move_progress > default_move_progress then
             move_progress = move_progress - move_speed
         end
-           
     end
 
-    local istop = -1
+    local istop = -1 --negative inverts rotation calc for top, wanted a simple way not to repeat code
     local isbot = 1
     
+    -- Ok so I know there are some magic numbers here but they just create an angled offset for each vertex, manually tweaked
+    -- to make the inital shape better resemble a room, could probably be done cleaner with more math but idc
     local topleft = rotate_about(top_center_of_spin.x, top_center_of_spin.y, istop, .75*math.pi + angle)
     local topright = rotate_about(top_center_of_spin.x, top_center_of_spin.y, istop, .25*math.pi + angle)
     local outertopleft = rotate_about(top_center_of_spin.x, top_center_of_spin.y, istop,  1.25*math.pi + angle)
@@ -162,29 +174,29 @@ function updateVerts()
 
     frontvert = {
         topleft,
-        topright,  -- top-right
-        bottomright,  -- bottom-right
-        bottomleft,  -- bottom-left
+        topright,
+        bottomright, 
+        bottomleft,  
     }
 
     backvert = {
-        outertopleft,  -- top-left
-        outertopright,  -- top-right of screen
-        outerbottomright,  -- bottom-right of screen
-        outerbottomleft,  -- bottom-left
+        outertopleft,
+        outertopright,  
+        outerbottomright,  
+        outerbottomleft, 
     }
 
     rightvert = {
-        topright,  -- top-left saame as top-right of frontvert
-        outertopright,  -- top-right of screen
-        outerbottomright,  -- bottom-right of screen
-        bottomright,  -- bottom-left same as bottom-right of frontvert
+        topright,  
+        outertopright,  
+        outerbottomright,  
+        bottomright,
     }
     leftvert = {
-        outertopleft,  -- top-left
-        topleft,  -- top-right same as top-left of frontvert
-        bottomleft,  -- bottom-right same as bottom-left of frontvert
-        outerbottomleft,  -- bottom-left
+        outertopleft,  
+        topleft, 
+        bottomleft, 
+        outerbottomleft,  
     }
 
     local bottomlookScene = { 
@@ -206,14 +218,14 @@ function updateVerts()
 
 end
 
+-- gets called in love.update, changes textures based on look_state
+-- as well as updates mesh vertex positions
 function updateMeshes()
-
     if look_state == "N" then
         left_mesh:setTexture(wall4_image)
         front_mesh:setTexture(wall1_image)
         right_mesh:setTexture(wall2_image)
         back_mesh:setTexture(wall3_image)
-
 
     elseif look_state == "E" then
 
@@ -269,6 +281,7 @@ function updateMeshes()
     back_mesh:setVertex(4, backvert[3].x, backvert[3].y, 0, 1)
 end
 
+-- Changes lookstate based on direction (I know it can be done cleaner idc)
 function changeLookState(direction)
     if direction == "right"  then
         if look_state == "N" then
@@ -294,6 +307,8 @@ function changeLookState(direction)
     end
 end
 
+-- Method calculates top or bottom vertexx position rotating around an ellipse
+-- to create illusion of a 3D rotation
 --a horizontal radius and b vertical radius
 function rotate_about(originx, originy, isbot, angle)
   local a_max = screen_width *.72  -- widest at top
@@ -307,7 +322,7 @@ function rotate_about(originx, originy, isbot, angle)
   a = a * move_progress
   b = b * move_progress
   
-
+  -- MATH IS MATH
   local s = math.sin(angle)
   local c = math.cos(angle)
 

@@ -1,3 +1,7 @@
+--- Textbox Queue Object
+-- Manages a queue of textboxes to be displayed on the screen
+-- In a normal c scenario, you would like to make this object singleton
+-- but since load gets called only once, this is sufficient for now
 
 text_que_pos = 1 -- empty queue
 textbox_queue = {

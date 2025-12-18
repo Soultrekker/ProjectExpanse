@@ -4,47 +4,45 @@ require "source/textbox"
 require "source/character"
 require "source/clickbox"
 
+-- Initializes once at the start of the program
 function love.load()
-
     initEnvironment()
     
-    
     love.physics.setMeter(64)
-    
-    
     initVerts()
     initMeshes()
-        
     initMouseClickBox()
 end
 
-turnstate = "stopped"
+turnstate = "stopped" -- can be "left", "right", "stopped"
 turn_progress = 0
 move_progress = 1
 turn_speed = .013
 move_speed = .013
-move_forward = false
-move_backward = false
+move_forward = false -- event flag for state machine
+move_backward = false -- event flag for state machine
 look_state = "N" -- can be 1 North, 2 East, 3 South, 4 West
 
 gamestate = "menu"
 base_scale = 1
 scale = base_scale
-back_opacity = 0
+back_opacity = 0 -- opacity of back wall changes when turning, looks EXTRA cool
 
+-- Handles key press events
 function love.keypressed(key)
     if key == "escape" then
-        love.event.quit()
+        love.event.quit() --exit the game
     end
 
+    -- Raises event flags for moving forward/backward
     if key == "up" then
         move_forward = true
     end
-
     if key == "down" then
         move_backward = true
     end
 
+    -- Moving left/right only works if not already turning or moving, initiate turn changes
     if key == "right" and turnstate == "stopped" and move_forward == false and move_backward == false then
         turnstate = "left"
     end
@@ -52,6 +50,7 @@ function love.keypressed(key)
         turnstate = "right" 
     end
 
+    -- Test textbox queue
     if key == "t" then
         textbox_queue.add("This is a test message.", 100, screen_height * 3/4, screen_width - 200, screen_height / 4, "normal")
     end
@@ -60,7 +59,7 @@ function love.keypressed(key)
     end
 end
 
-
+-- Gets called every dt to update game state
 function love.update(dt)
     world:update(dt)
     updateVerts()
@@ -70,6 +69,7 @@ function love.update(dt)
 end
 
 
+-- Draws all visual elements
 function love.draw()
     love.graphics.setColor(1, 1, 1, 1) -- NORAMAL
 
@@ -79,7 +79,7 @@ function love.draw()
     textbox_queue.draw()
 
     -- Draw the test object (highlight if hovered)
-    if hoveredObject == test_object then
+    if hoveredObject == test_object.fixture:getUserData() then
         love.graphics.setColor(0, 1, 0, 1) -- Highlighted green
     else
         love.graphics.setColor(1, 0, 0, 1) -- Default red
